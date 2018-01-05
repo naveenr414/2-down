@@ -1,0 +1,79 @@
+
+.highlighted
+{
+	background-color: #87CEFA;
+
+}
+
+.black
+{
+	background-color: black;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;          
+
+}
+
+input
+{
+	text-align: center;
+	text-transform:uppercase;
+	outline: none;
+	border: 1px;
+	border-style: solid;
+	font-size: 30px;
+	width: 45px;
+	height: 45px;
+}
+
+input:focus
+{
+	background-color: orange;
+}
+
+br
+{
+	border: 1px;
+	border-style: solid;
+}
+
+input::selection
+{
+	background-color: orange;
+	text-color: black;
+}
+
+
+.container
+{
+	margin: 0px;
+	display: inline-block;
+	position: relative;
+
+}
+
+table
+{
+	float: right;
+	margin: 10px;
+}
+
+.top-left 
+{
+	position: absolute; 
+	font-size: 10px;
+	top: 2px;
+	left: 2px;
+}
+
+html
+{
+	font-family: Arial;
+}
+
+p
+{
+	font-family: Arial;
+	font-size: 20px;
+}
