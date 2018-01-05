@@ -23,7 +23,7 @@ io.on('connection', function(socket){
 		fs.readFile(location, 'utf8', function(err, contents) {
 			data = JSON.parse(contents);
 			console.log("Data "+data);
-			io.emit('metadata',data);
+			socket.emit('metadata',data);
 		});
 		
 	});
