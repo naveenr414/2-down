@@ -10,6 +10,9 @@ var nums = 0;
 var numFilled = 0;
 var totalNum = 0;
 
+var previousX = 0;
+var previousY = 0;
+
 var grid = 0;
 var filledIn = 0;
 
@@ -445,6 +448,9 @@ function init()
 					$("#"+currentX+"_"+currentY).val($("#"+currentX+"_"+currentY).val());
 					$("#"+currentX+"_"+currentY).select();
 					
+					previousX = currentX;
+					previousY = currentY;
+					
 					$("#clue").html(currentClue(currentX,currentY));
 				}
 				
@@ -456,6 +462,18 @@ function init()
 				
 				var currentX = parseInt(current[0]);
 				var currentY = parseInt(current[1]);
+				
+				if(currentX == previousX && currentY == previousY)
+				{
+					if(direction == "up")
+					{
+						direction = "right";
+					}
+					else if(direction == "right")
+					{
+						direction = "up";
+					}
+				}
 				
 				for(var i1 = 1;i1<=height;i1++)
 				{
@@ -473,6 +491,9 @@ function init()
 				}
 				
 				$("#clue").html(currentClue(currentX,currentY));
+				
+				previousX = currentX;
+				previousY = currentY;
 			});
 		}
 	}			
@@ -634,6 +655,8 @@ $(document).keyup(function(e){
 		fillRow(currentX,currentY);
 	}
 	
+	previousX = currentX;
+	previousY = currentY;
 	$("#clue").html(currentClue(currentX,currentY));
 	
 		

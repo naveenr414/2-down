@@ -12,7 +12,7 @@ app.use('/', express.static(__dirname + '/'));
 
 io.on('connection', function(socket){	
 	socket.on('entered', function(msg){
-		console.log(msg);
+		console.log("Entered "+msg);
 		io.emit('entered',msg);
 	}); 
 	
@@ -28,8 +28,6 @@ io.on('connection', function(socket){
 		
 	});
 });
-
-
 
 http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
