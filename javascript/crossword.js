@@ -16,10 +16,13 @@ var previousY = 0;
 var grid = 0;
 var filledIn = 0;
 
+var maxMessages = 10;
+
 var socket = io();
 
 var month = prompt("Enter the month");
 var date = prompt("Enter the date");
+var name = prompt("Enter a name");
 
 socket.emit('request',month+"/"+date);
 
@@ -80,6 +83,15 @@ socket.on('metadata',function(msg)
 	console.log("Got data");
 	createCrossword(msg);
 	init();
+});
+
+socket.on('message', function(msg){
+	$('#messages').append($('<li>').text(msg));
+	if($('#messages li').length>maxMessages )
+	{
+		$("#messages li").first().remove();
+	}
+
 });
 
 function createCrossword(data)
@@ -163,6 +175,12 @@ function createCrossword(data)
 	
 	html+='<p id="clue"> </p>';
 	
+	//Messages
+	html+='<ul id="messages"></ul>\n';
+	html+='<input id="m">';
+	html+='<button type="button" id="send">Send</button>\n'
+    html+='</form>\n';
+	
 	document.body.innerHTML = html;
 }
 
@@ -216,6 +234,12 @@ function currentClue(currentX,currentY)
 		
 		return "";
 	}
+}
+
+function sendMessage()
+{
+	socket.emit('message', name+": "+$('#m').val());
+	$('#m').val('');	
 }
 
 function clearRow(currentY)
@@ -497,12 +521,31 @@ function init()
 			});
 		}
 	}			
+
+	$('#send').click(function()
+	{
+		sendMessage();
+	});
+
 }
    
 $(document).keyup(function(e){		
 	var num = $("*:focus").attr("id").split("_");
 	var currentX = parseInt(num[0]);
 	var currentY = parseInt(num[1]);
+	
+	if($("*:focus").attr("id") == "m")
+	{
+		if(e.keyCode == 13)
+		{
+			sendMessage();
+		}
+	}
+	
+	if(isNaN(currentX) || isNaN(currentY))
+	{
+		return false;
+	}
 	
 	//Backspace
 	if(e.keyCode == 8)

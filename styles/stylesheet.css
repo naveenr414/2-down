@@ -27,6 +27,14 @@ input
 	height: 45px;
 }
 
+#m
+{
+	width: 200px;
+	background-color: white;
+	font-size: 20px;
+	height: 30px;
+}
+
 input:focus
 {
 	background-color: orange;
