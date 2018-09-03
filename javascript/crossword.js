@@ -8,7 +8,7 @@ var down = 0;
 var nums = 0;
 
 var numFilled = 0;
-var totalNum = 0;
+var numLetters = 0;
 
 var previousX = 0;
 var previousY = 0;
@@ -20,66 +20,65 @@ var maxMessages = 10;
 
 var socket = io();
 
-var month = prompt("Enter the month");
-var date = prompt("Enter the date");
-var name = prompt("Enter a name");
-
-socket.emit('request',month+"/"+date);
-
 var won = false;
 
-function checkWin()
-{	
-	if(numFilled == totalNum && !won)
-	{
-		var works = true;
+function blankLetter(grid,width,i,j){
+	return grid[i*width+j]==".";
+}
+
+function checkWin(){	
+	if(numFilled == numLetters && !won){
+		var solved = true;
 		
-		for(var i = 0;i<height;i++)
-		{
-			for(var j = 0;j<width;j++)
-			{
-				if($("#"+(j+1)+"_"+(i+1)).val().toUpperCase() != grid[i*width+j].toUpperCase() && grid[i*width+j]!=".")
-				{
-					works = false;
-					break;
+		for(var i = 0;i<height && solved;i++){
+			for(var j = 0;j<width && solved;j++){
+				var actualValue = grid[i*width+j];
+				actualValue = actualValue.toUpperCase();
+				var submittedValue = $("#"+(j+1)+"_"+(i+1)).val();
+				submittedValue = submittedValue.toUpperCase();
+				if(actualValue!="." && submittedValue != actualValue){
+					solved = false;
 				}
-			}
-			
-			if(!works)
-			{
-				break;
 			}
 		}
 		
-		if(works)
-		{
+		if(solved){
 			alert("Congrats, you've solved the puzzle!");
 			won = true;
 		}
 	}
 }
 
+$("#enter").click(function(){
+		var month = $("#month").val();
+		var date = $("#date").val();
+		var name = $("name").val();
+
+		socket.emit('request',month+"/"+date);	
+	}
+);
+
 socket.on('entered', function(msg){
 	var temp = msg.split("_");
-	var currentNum = $("#"+temp[0]+"_"+temp[1]).val().length;
+	var currentX = temp[0];
+	var currentY = temp[1];
+	var value = temp[2]
 	
-	$("#"+temp[0]+"_"+temp[1]).val(temp[2]);
+	var gridBox = $("#"+currentX+"_"+currentY);
+	var oldLength = gridBox.val().length;
+	gridBox.val(value);
 	
-	if(temp[2].length == 0 && currentNum == 1)
-	{
+	if(value.length == 0 && oldLength == 1){
 		numFilled-=1;
 	}
-	else if(temp[2].length == 1 && currentNum == 0)
-	{
+	else if(value.length == 1 && oldLength == 0){
 		numFilled+=1;
 	}
 	
 	checkWin();
-	
 });
 
-socket.on('metadata',function(msg)
-{
+socket.on('metadata',function(msg){
 	console.log("Got data");
 	createCrossword(msg);
 	init();
@@ -87,15 +86,13 @@ socket.on('metadata',function(msg)
 
 socket.on('message', function(msg){
 	$('#messages').append($('<li>').text(msg));
-	if($('#messages li').length>maxMessages )
-	{
+	var numMessages = $("#message li").length
+	if(numMessages>maxMessages ){
 		$("#messages li").first().remove();
 	}
-
 });
 
-function createCrossword(data)
-{
+function createCrossword(data){
 	grid = data.grid;
 	nums = data.gridnums;
 	width = data.size.cols;
@@ -103,20 +100,15 @@ function createCrossword(data)
 	
 	filledIn = [];
 		
-	for(var i = 0;i<height;i++)
-	{
+	for(var i = 0;i<height;i++){
 		var temp = []
-		
-		for(var j = 0;j<width;j++)
-		{
-			if(grid[i*width+j]!=".")
-			{
-				totalNum+=1;
+		for(var j = 0;j<width;j++){
+			if(!blankLetter(grid,width,i,j)){
+				numLetters+=1;
 			}
 			
 			temp.push(false);
 		}
-		
 		filledIn.push(temp);
 	}
 	
@@ -125,16 +117,12 @@ function createCrossword(data)
 	
 	html+='<table cellspacing="0" id="crossword">'
 	
-	for(i = 0;i<height;i++)
-	{
-		html+="<tr>"
-		html+="\n"
-		for(j = 0;j<width;j++)
-		{
+	for(i = 0;i<height;i++){
+		html+="<tr>\n"
+		for(j = 0;j<width;j++){
 			var num = width*i+j;
 			html+='<div class="container">'
-			if(nums[num]!=0)
-			{
+			if(nums[num]!=0){
 				html+='<div class="top-left">'
 				html+=String(nums[num])
 				html+="</div>";
@@ -146,21 +134,18 @@ function createCrossword(data)
 			html+=String(i+1)
 			html+='" size="1" maxlength="1"'
 			
-			if(grid[num] == ".")
-			{
+			if(grid[num] == "."){
 				html+='class="black"'
 			}
 			
 			html+="> </input>";
-			
 			html+="</div>";
 		}
 		
 		html+="</tr>"
 		html+="\n"
 		
-		if(i!=14)
-		{
+		if(i!=width-1){
 			html+="<br>"
 			html+="\n";
 		}
@@ -168,11 +153,10 @@ function createCrossword(data)
 		html+="\n";
 	}	
 	
-	html+='</table>';
-	
 	across = data.clues.across;
 	down = data.clues.down;
-	
+
+	html+='</table>';
 	html+='<p id="clue"> </p>';
 	
 	//Messages
@@ -184,76 +168,59 @@ function createCrossword(data)
 	document.body.innerHTML = html;
 }
 
-function currentClue(currentX,currentY)
-{
-	if(direction == "up")
-	{
-		var i = currentY;
+function currentClue(currentX,currentY){
+	if(direction == "up"){
+		var startY = currentY;
 					
-		while(i>=2 && !$("#"+(currentX)+"_"+(i-1)).hasClass("black"))
-		{
-			i-=1;
+		while(startY>=2 && !$("#"+(currentX)+"_"+(startY-1)).hasClass("black")){
+			startY-=1;
 		}
 		
+		var gridNum = nums[(startY-1)*width+(currentX-1)];
+		var target = String(gridNum) + ".";
 		
-		var num = nums[(i-1)*width+(currentX-1)];
-		var target = String(num) + ".";
-		
-		for(j = 0;j<down.length;j++)
-		{
-			if(down[j].substring(0,target.length) == target)
-			{
+		for(j = 0;j<down.length;j++){
+			var downClue = down[j].substring(0,target.length);
+			if(downClue == target){
 				return down[j];
 			}
 		}
-		
-		return "";
 	}
-	else if(direction == "right")
-	{
+	else if(direction == "right"){
+		var startX = currentX;
 		
-		var i = currentX;
-		
-		while(i>=2 && !$("#"+(i-1)+"_"+currentY).hasClass("black"))
-		{
-			i-=1;
+		while(startX>=2 && !$("#"+(startX-1)+"_"+currentY).hasClass("black")){
+			startX-=1;
 		}
 		
-		var num = nums[(currentY-1)*width+(i-1)];
-		var target = String(num)+".";
+		var gridNum = nums[(currentY-1)*width+(startX-1)];
+		var target = String(gridNum)+".";
 		
 				
-		for(j = 0;j<across.length;j++)
-		{
-			if(across[j].substring(0,target.length)==target)
-			{	
+		for(j = 0;j<across.length;j++){
+			var acrossClue = across[j].substring(0,target.length);
+			if(acrossClue==target){	
 				return across[j];
 			}
 		}
-	
-		
-		return "";
 	}
+	
+	return "";
 }
 
-function sendMessage()
-{
+function sendMessage(){
 	socket.emit('message', name+": "+$('#m').val());
 	$('#m').val('');	
 }
 
-function clearRow(currentY)
-{	
-	for(var i = 1;i<=width;i++)
-	{
+function clearRow(currentY){	
+	for(var i = 1;i<=width;i++){
 		$("#"+i+"_"+currentY).removeClass("highlighted");
 	}
 }
 
-function clearColumn(currentX)
-{
-	for(var i = 1;i<=height;i++)
-	{
+function clearColumn(currentX){
+	for(var i = 1;i<=height;i++){
 		if(!$("#"+currentX+"_"+i).hasClass("black"))
 		{
 			$("#"+currentX+"_"+i).removeClass("highlighted");
@@ -261,19 +228,16 @@ function clearColumn(currentX)
 	}
 }
 
-function fillRow(currentX,currentY)
-{
+function fillRow(currentX,currentY){
+	// Fill Left then fill right
 	i = currentX;
-
-	while(i>=1 && !$("#"+i+"_"+currentY).hasClass("black"))
-	{
+	while(i>=1 && !$("#"+i+"_"+currentY).hasClass("black")){
 		$("#"+i+"_"+currentY).addClass("highlighted");
 		i-=1;
 	}
 	
 	i = currentX;
-	while(i<=width && !$("#"+i+"_"+currentY).hasClass("black"))
-	{
+	while(i<=width && !$("#"+i+"_"+currentY).hasClass("black")){
 		$("#"+i+"_"+currentY).addClass("highlighted");
 		i+=1;
 	}
@@ -281,24 +245,21 @@ function fillRow(currentX,currentY)
 
 function fillColumn(currentX,currentY)
 {
+	//Fill up then fill down
 	i = currentY;
-	
-	while(i>=1 && !$("#"+currentX+"_"+i).hasClass("black"))
-	{
+	while(i>=1 && !$("#"+currentX+"_"+i).hasClass("black")){
 		$("#"+currentX+"_"+i).addClass("highlighted");
 		i-=1;
 	}
 	
 	i = currentY;
-	while(i<=height && !$("#"+currentX+"_"+i).hasClass("black"))
-	{
+	while(i<=height && !$("#"+currentX+"_"+i).hasClass("black")){
 		$("#"+currentX+"_"+i).addClass("highlighted");
 		i+=1;
 	}
 }	
 
-function nextDown(currentX,currentY)
-{
+function nextDown(currentX,currentY){
 	var nextY = currentY;
 	var i = currentY+1;
 	while(i<=height && i!=nextY)
@@ -480,7 +441,7 @@ function init()
 				
 
 			});
-			
+						
 			$("#"+i+"_"+j).click(function(){
 				var current = $(this).attr('id').split("_");
 				
